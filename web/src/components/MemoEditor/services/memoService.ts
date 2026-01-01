@@ -69,6 +69,8 @@ export const memoService = {
     options: {
       memoName?: string;
       parentMemoName?: string;
+      creatorName?: string;
+      enableDailyMode?: boolean;
     },
   ): Promise<{ memoName: string; hasChanges: boolean }> {
     // 1. Upload local files first
@@ -91,7 +93,21 @@ export const memoService = {
       return { memoName: memo.name, hasChanges: true };
     }
 
-    // 3. Create new memo or comment
+    // 3. 🆕 每日模式：追加到当天的每日 Memo 或创建新的每日 Memo
+    if (options.enableDailyMode && !options.parentMemoName && options.creatorName) {
+      const { dailyMemoService } = await import("./dailyMemoService");
+      const result = await dailyMemoService.save(state, {
+        creatorName: options.creatorName,
+        enableDailyMode: true,
+      });
+
+      if (result.hasChanges) {
+        return { memoName: result.memoName, hasChanges: true };
+      }
+      // 如果 dailyMemoService 返回 hasChanges: false，则继续使用默认逻辑
+    }
+
+    // 4. Create new memo or comment (原有逻辑)
     const memoData = create(MemoSchema, {
       content: state.content,
       visibility: state.metadata.visibility,
@@ -104,9 +120,9 @@ export const memoService = {
 
     const memo = options.parentMemoName
       ? await memoServiceClient.createMemoComment({
-          name: options.parentMemoName,
-          comment: memoData,
-        })
+        name: options.parentMemoName,
+        comment: memoData,
+      })
       : await memoServiceClient.createMemo({ memo: memoData });
 
     return { memoName: memo.name, hasChanges: true };

@@ -76,7 +76,12 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     dispatch(actions.setLoading("saving", true));
 
     try {
-      const result = await memoService.save(state, { memoName, parentMemoName });
+      const result = await memoService.save(state, {
+        memoName,
+        parentMemoName,
+        creatorName: currentUser?.name,
+        enableDailyMode: true, // 🆕 启用每日模式
+      });
 
       if (!result.hasChanges) {
         toast.error(t("editor.no-changes-detected"));

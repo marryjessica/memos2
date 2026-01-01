@@ -158,6 +158,134 @@ sequenceDiagram
     F-->>U: 19. UI 更新显示新 Memo
 ```
 
+### MemoService.CreateMemo 详细时序图
+
+```mermaid
+sequenceDiagram
+    participant C as Connect Client
+    participant I as Auth Interceptor
+    participant MS as MemoService
+    participant FU as fetchCurrentUser()
+    participant STORE as Store Layer
+    participant MP as memopayload<br/>RebuildMemoPayload
+    participant MD as MarkdownService
+    participant ATT as SetMemoAttachments()
+    participant REL as SetMemoRelations()
+    participant CVT as convertMemoFromStore()
+    participant WH as DispatchWebhook
+    participant D as Database
+
+    Note over C,D: MemoService.CreateMemo 服务层详细流程
+
+    C->>I: CreateMemoRequest
+    I->>MS: 1. CreateMemo(ctx, request)
+    
+    rect rgb(255, 245, 230)
+        Note right of MS: 用户认证阶段
+        MS->>FU: 2. fetchCurrentUser(ctx)
+        FU->>STORE: GetUser()
+        STORE->>D: SELECT user
+        D-->>STORE: user row
+        STORE-->>FU: *store.User
+        FU-->>MS: user, nil
+        MS->>MS: 3. 检查用户是否为空
+    end
+
+    rect rgb(230, 245, 255)
+        Note right of MS: UID 生成与验证阶段
+        MS->>MS: 4. 处理 memo_id<br/>若为空则 shortuuid.New()<br/>否则验证 UIDMatcher 格式
+    end
+
+    rect rgb(245, 255, 230)
+        Note right of MS: 构建 store.Memo 对象
+        MS->>MS: 5. 创建 store.Memo{<br/>  UID, CreatorID,<br/>  Content, Visibility<br/>}
+    end
+
+    rect rgb(255, 230, 245)
+        Note right of MS: 实例设置验证阶段
+        MS->>STORE: 6. GetInstanceMemoRelatedSetting(ctx)
+        STORE->>D: SELECT setting
+        D-->>STORE: setting row
+        STORE-->>MS: *MemoRelatedSetting
+        MS->>MS: 7. 检查 DisallowPublicVisibility
+        MS->>MS: 8. getContentLengthLimit(ctx)
+        MS->>MS: 9. 验证内容长度
+    end
+
+    rect rgb(230, 255, 245)
+        Note right of MS: Markdown 解析阶段
+        MS->>MP: 10. RebuildMemoPayload(memo, markdownService)
+        MP->>MD: 11. Parse(content)
+        MD-->>MP: AST Nodes
+        MP->>MP: 12. 提取 Tags, Links,<br/>Tasks, Code Blocks
+        MP-->>MS: 更新 memo.Payload
+        MS->>MS: 13. 处理 Location (如有)
+    end
+
+    rect rgb(245, 230, 255)
+        Note right of MS: 数据持久化阶段
+        MS->>STORE: 14. CreateMemo(ctx, create)
+        STORE->>D: 15. INSERT INTO memo
+        alt 唯一约束冲突
+            D-->>STORE: UNIQUE constraint failed
+            STORE-->>MS: error
+            MS-->>I: AlreadyExists error
+        else 成功
+            D-->>STORE: new memo row
+            STORE-->>MS: *store.Memo
+        end
+    end
+
+    rect rgb(255, 240, 230)
+        Note right of MS: 附件处理阶段 (如有)
+        opt request.Memo.Attachments > 0
+            MS->>ATT: 16. SetMemoAttachments()
+            ATT->>STORE: UpdateAttachment()
+            STORE->>D: UPDATE attachment SET memo_id
+            D-->>STORE: affected rows
+            STORE-->>ATT: nil
+            ATT-->>MS: response, nil
+            MS->>STORE: 17. ListAttachments(memo_id)
+            STORE->>D: SELECT attachments
+            D-->>STORE: attachment rows
+            STORE-->>MS: []*store.Attachment
+        end
+    end
+
+    rect rgb(230, 240, 255)
+        Note right of MS: 关系处理阶段 (如有)
+        opt request.Memo.Relations > 0
+            MS->>REL: 18. SetMemoRelations()
+            REL->>STORE: UpsertMemoRelation()
+            STORE->>D: INSERT/UPDATE relations
+            D-->>STORE: affected rows
+            STORE-->>REL: nil
+            REL-->>MS: response, nil
+        end
+    end
+
+    rect rgb(245, 245, 230)
+        Note right of MS: 响应转换阶段
+        MS->>CVT: 19. convertMemoFromStore()
+        CVT->>CVT: 20. 转换 Visibility<br/>格式化 CreateTime/UpdateTime<br/>构建 Resource Name
+        CVT-->>MS: *v1pb.Memo
+    end
+
+    rect rgb(240, 230, 245)
+        Note right of MS: Webhook 分发阶段
+        MS->>WH: 21. DispatchMemoCreatedWebhook()
+        WH->>STORE: ListWebhooks(creatorID)
+        STORE->>D: SELECT webhooks
+        D-->>STORE: webhook rows
+        STORE-->>WH: []*store.Webhook
+        WH->>WH: 22. 异步 HTTP POST<br/>到各 Webhook URL
+        WH-->>MS: nil (错误仅记录日志)
+    end
+
+    MS-->>I: 23. 返回 *v1pb.Memo
+    I-->>C: 24. gRPC Response
+```
+
 ---
 
 ## 🔐 认证流程
