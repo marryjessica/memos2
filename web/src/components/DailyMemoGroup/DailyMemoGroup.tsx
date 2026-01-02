@@ -140,7 +140,7 @@ const DailyMemoGroup = ({
 
             {/* Content - Memo List */}
             {isExpanded && (
-                <div className="px-4 pb-3 space-y-2">
+                <div className="px-4 pb-3 space-y-0">
                     {group.memos.length === 0 ? (
                         <div className="text-center py-6 text-muted-foreground text-sm">
                             暂无待办

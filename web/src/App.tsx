@@ -20,9 +20,9 @@ const App = () => {
     cleanupExpiredOAuthState();
   }, []);
 
-  // Redirect to sign up page if no instance owner
+  // Redirect to sign up page if no instance owner (but avoid redirect loop)
   useEffect(() => {
-    if (!instanceProfile.owner) {
+    if (!instanceProfile.owner && window.location.pathname !== "/auth/signup") {
       navigateTo("/auth/signup");
     }
   }, [instanceProfile.owner, navigateTo]);

@@ -52,7 +52,7 @@ const Home = () => {
         const isActive = activeAnnotationMemoId === memo.name;
 
         return (
-            <div className="grid grid-cols-[1fr_300px] gap-8 relative items-start group/row min-h-[100px]">
+            <div className="grid grid-cols-[1fr_300px] gap-0 relative items-start group/row">
                 {/* Column 1: Memo Card */}
                 <MemoContextMenu
                     key={`context-${memo.name}`}
@@ -75,7 +75,7 @@ const Home = () => {
                     {/* Visual Connector Line (Pseudo-line from Memo to Slot) */}
                     {/* Only show if slot has content or is active? User said "connected by a line". */}
                     {/* We used a line inside MemoAnnotationSlot, but a spanning line here is also good */}
-                    <div className="absolute top-6 -left-8 w-8 border-t border-red-400 border-dashed pointer-events-none" />
+                    <div className="hidden absolute top-6 -left-8 w-8 border-t border-red-400 border-dashed pointer-events-none" />
 
                     <MemoAnnotationSlot
                         memo={memo}
