@@ -80,7 +80,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
         memoName,
         parentMemoName,
         creatorName: currentUser?.name,
-        enableDailyMode: true, // 🆕 启用每日模式
+        enableAtomicMode: true, // 🆕 原子化模式：多行拆分为独立 Memo
       });
 
       if (!result.hasChanges) {

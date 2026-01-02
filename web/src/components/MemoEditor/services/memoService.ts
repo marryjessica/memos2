@@ -71,6 +71,7 @@ export const memoService = {
       parentMemoName?: string;
       creatorName?: string;
       enableDailyMode?: boolean;
+      enableAtomicMode?: boolean; // 🆕 原子化模式：多行拆分为独立 Memo
     },
   ): Promise<{ memoName: string; hasChanges: boolean }> {
     // 1. Upload local files first
@@ -93,8 +94,24 @@ export const memoService = {
       return { memoName: memo.name, hasChanges: true };
     }
 
-    // 3. 🆕 每日模式：追加到当天的每日 Memo 或创建新的每日 Memo
-    if (options.enableDailyMode && !options.parentMemoName && options.creatorName) {
+    // 3. 🆕 原子化模式：格式化为待办并拆分多行
+    if (options.enableAtomicMode && !options.parentMemoName && !options.memoName) {
+      const { atomicMemoService } = await import("./atomicMemoService");
+
+      // 原子化模式：无论单行还是多行，都格式化为待办格式
+      const result = await atomicMemoService.save(state, {
+        enableAtomicMode: true,
+      });
+
+      if (result.hasChanges && result.memoNames.length > 0) {
+        // 返回第一个创建的 Memo 名称
+        return { memoName: result.memoNames[0], hasChanges: true };
+      }
+      // 如果保存失败，继续使用下面的默认逻辑
+    }
+
+    // 4. 每日模式（可选，已被原子化模式替代）
+    if (options.enableDailyMode && !options.enableAtomicMode && !options.parentMemoName && options.creatorName) {
       const { dailyMemoService } = await import("./dailyMemoService");
       const result = await dailyMemoService.save(state, {
         creatorName: options.creatorName,
@@ -104,7 +121,6 @@ export const memoService = {
       if (result.hasChanges) {
         return { memoName: result.memoName, hasChanges: true };
       }
-      // 如果 dailyMemoService 返回 hasChanges: false，则继续使用默认逻辑
     }
 
     // 4. Create new memo or comment (原有逻辑)

@@ -3,6 +3,7 @@ import { ArrowUpLeftFromCircleIcon, MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useLocation, useParams } from "react-router-dom";
+import MemoAnnotationPanel from "@/components/MemoAnnotationPanel";
 import { MemoDetailSidebar, MemoDetailSidebarDrawer } from "@/components/MemoDetailSidebar";
 import MemoEditor from "@/components/MemoEditor";
 import MemoView from "@/components/MemoView";
@@ -26,6 +27,7 @@ const MemoDetail = () => {
   const uid = params.uid;
   const memoName = `${memoNamePrefix}${uid}`;
   const [showCommentEditor, setShowCommentEditor] = useState(false);
+  const [showAnnotationPanel, setShowAnnotationPanel] = useState(false);
 
   // Fetch main memo with React Query
   const { data: memo, error, isLoading } = useMemo(memoName, { enabled: !!memoName });
@@ -95,6 +97,22 @@ const MemoDetail = () => {
             showPinned
             showNsfwContent
           />
+
+          {/* Annotation toggle button */}
+          {currentUser && (
+            <div className="mt-3 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAnnotationPanel(!showAnnotationPanel)}
+                className={showAnnotationPanel ? "bg-primary/10" : ""}
+              >
+                <MessageCircleIcon className="w-4 h-4 mr-2" />
+                {showAnnotationPanel ? "隐藏批注" : "查看批注"}
+              </Button>
+            </div>
+          )}
+
           <div className="pt-8 pb-16 w-full">
             <h2 id="comments" className="sr-only">
               {t("memo.comment.self")}
@@ -155,6 +173,13 @@ const MemoDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Annotation Panel - rendered outside the main layout */}
+      <MemoAnnotationPanel
+        memo={memo}
+        open={showAnnotationPanel}
+        onClose={() => setShowAnnotationPanel(false)}
+      />
     </section>
   );
 };

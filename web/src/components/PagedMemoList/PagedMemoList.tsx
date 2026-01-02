@@ -12,6 +12,7 @@ import { Routes } from "@/router";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import DailyMemoList from "../DailyMemoList";
 import Empty from "../Empty";
 import type { MemoRenderContext } from "../MasonryView";
 import MasonryView from "../MasonryView";
@@ -27,6 +28,8 @@ interface Props {
   filter?: string;
   pageSize?: number;
   showCreator?: boolean;
+  /** Enable daily grouping mode - renders memos grouped by date */
+  groupByDate?: boolean;
 }
 
 function useAutoFetchWhenNotScrollable({
@@ -152,19 +155,35 @@ const PagedMemoList = (props: Props) => {
         <Skeleton showCreator={props.showCreator} count={4} />
       ) : (
         <>
-          <MasonryView
-            memoList={sortedMemoList}
-            renderer={props.renderer}
-            prefixElement={
-              <>
-                {showMemoEditor ? (
-                  <MemoEditor className="mb-2" cacheKey="home-memo-editor" placeholder={t("editor.any-thoughts")} />
-                ) : undefined}
-                <MemoFilters />
-              </>
-            }
-            listMode={layout === "LIST"}
-          />
+          {/* Conditional rendering: Daily grouping or Masonry view */}
+          {props.groupByDate ? (
+            <DailyMemoList
+              memos={sortedMemoList}
+              renderer={(memo) => props.renderer(memo)}
+              prefixElement={
+                <>
+                  {showMemoEditor ? (
+                    <MemoEditor className="mb-2" cacheKey="home-memo-editor" placeholder={t("editor.any-thoughts")} />
+                  ) : undefined}
+                  <MemoFilters />
+                </>
+              }
+            />
+          ) : (
+            <MasonryView
+              memoList={sortedMemoList}
+              renderer={props.renderer}
+              prefixElement={
+                <>
+                  {showMemoEditor ? (
+                    <MemoEditor className="mb-2" cacheKey="home-memo-editor" placeholder={t("editor.any-thoughts")} />
+                  ) : undefined}
+                  <MemoFilters />
+                </>
+              }
+              listMode={layout === "LIST"}
+            />
+          )}
 
           {/* Loading indicator for pagination */}
           {isFetchingNextPage && <Skeleton showCreator={props.showCreator} count={2} />}

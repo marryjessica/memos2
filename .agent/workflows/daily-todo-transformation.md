@@ -1,8 +1,156 @@
 ---
-description: 将 Memos 改造为每日待办程序的实施计划
+description: 将 Memos 改造为原子化待办程序的实施计划
 ---
 
-# 每日待办程序改造实施计划
+# 原子化待办程序改造实施计划
+
+## 🎯 核心需求
+
+1. **每个待办独立存储**：一条待办 = 一个 Memo，拥有唯一 ID
+2. **批注功能**：每条待办可添加批注（利用现有 Comment 系统）
+3. **日期分组展示**：相同日期的待办聚合展示，但数据层独立
+4. **右键菜单**：快速操作待办（编辑、批注、删除）
+
+---
+
+## 📁 新增文件清单
+
+### Hooks
+
+| 文件路径 | 职责 |
+|---------|------|
+| `web/src/hooks/useGroupedMemos.ts` | 按日期分组 Memo 的 Hook |
+| `web/src/hooks/useAnnotations.ts` | 批注管理 Hook（基于 Comment API）|
+
+### 组件
+
+| 文件路径 | 职责 |
+|---------|------|
+| `web/src/components/DailyMemoGroup/` | 日期分组卡片组件 |
+| `web/src/components/MemoContextMenu/` | 右键上下文菜单 |
+| `web/src/components/MemoAnnotationPanel/` | 批注侧边面板 |
+
+### 服务
+
+| 文件路径 | 职责 |
+|---------|------|
+| `web/src/components/MemoEditor/services/atomicMemoService.ts` | 原子化保存服务 |
+
+---
+
+## 🔧 实施步骤
+
+### 第一步：创建 `useGroupedMemos` Hook
+
+**文件**: `web/src/hooks/useGroupedMemos.ts`
+
+将 Memo 列表按 `displayTime` 日期分组：
+
+```typescript
+interface DailyGroup {
+  date: string;           // "2026-01-02"
+  displayDate: string;    // "今天" / "昨天" / "1月2日"
+  memos: Memo[];
+  incompleteCount: number;
+  completeCount: number;
+}
+
+function useGroupedMemos(memos: Memo[]): DailyGroup[]
+```
+
+---
+
+### 第二步：创建 `useAnnotations` Hook
+
+**文件**: `web/src/hooks/useAnnotations.ts`
+
+复用 Memos 现有 Comment API：
+
+```typescript
+interface UseAnnotationsReturn {
+  annotations: Memo[];
+  addAnnotation: (content: string) => Promise<Memo>;
+  deleteAnnotation: (name: string) => Promise<void>;
+}
+
+function useAnnotations(memoName: string): UseAnnotationsReturn
+```
+
+---
+
+### 第三步：创建 `atomicMemoService`
+
+**文件**: `web/src/components/MemoEditor/services/atomicMemoService.ts`
+
+将多行内容拆分为独立 Memo：
+
+```typescript
+// 用户输入:
+// 完成项目计划书
+// 开会讨论需求
+// 代码审查
+
+// 结果: 创建 3 个独立 Memo，每行为一条待办
+```
+
+---
+
+### 第四步：修改 `memoService.ts`
+
+**文件**: `web/src/components/MemoEditor/services/memoService.ts`
+
+集成原子化保存：
+
+```typescript
+const result = await memoService.save(state, {
+  memoName,
+  parentMemoName,
+  creatorName: currentUser?.name,
+  enableAtomicMode: true, // 🆕 原子化模式
+});
+```
+
+---
+
+### 第五步：创建 UI 组件
+
+1. **DailyMemoGroup** - 日期分组卡片
+2. **MemoContextMenu** - 右键菜单（编辑、批注、删除）
+3. **MemoAnnotationPanel** - 批注侧边面板
+
+---
+
+## 📋 执行顺序
+
+// turbo-all
+
+1. 创建 `web/src/hooks/useGroupedMemos.ts` ✅
+2. 创建 `web/src/hooks/useAnnotations.ts` ✅
+3. 创建 `web/src/components/DailyMemoGroup/` ✅
+4. 创建 `web/src/components/MemoContextMenu/` ✅
+5. 创建 `web/src/components/MemoAnnotationPanel/` ✅
+6. 创建 `web/src/components/MemoEditor/services/atomicMemoService.ts` ✅
+7. 修改 `web/src/components/MemoEditor/services/memoService.ts` ✅
+8. 修改 `web/src/components/MemoEditor/index.tsx` ✅
+9. 更新 hooks 和 services 导出 ✅
+10. 运行 `npm run build` 验证 ✅
+
+---
+
+## ⚠️ 注意事项
+
+- **多行拆分**：按 Enter 换行拆分为多条待办，自动换行不拆分
+- **附件处理**：多行拆分时，附件仅附加到第一条待办
+- **批注系统**：复用 Comment API，无需后端改动
+- **向后兼容**：`enableAtomicMode` flag 控制新行为
+
+---
+
+## ✅ 验证结果
+
+1. **构建验证** ✅ - `npm run build` 成功
+2. **新增组件** ✅ - 6 个新文件创建完成
+3. **原子化逻辑** ✅ - 多行拆分服务就绪
 
 ## 🎯 核心需求
 
