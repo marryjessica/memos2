@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: api/v1/memo_service.proto
 
-package apiv1
+package v1
 
 import (
 	context "context"

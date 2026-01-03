@@ -116,6 +116,46 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 		slog.Warn("Failed to dispatch memo created webhook", slog.Any("err", err))
 	}
 
+	// Trigger AI auto tagging
+	go func() {
+		ctx := context.Background()
+		tags, err := s.AIService.GenerateTags(ctx, memo.Content)
+		if err != nil {
+			slog.Error("failed to generate tags", slog.String("error", err.Error()))
+			return
+		}
+		if len(tags) == 0 {
+			return
+		}
+
+		latest, err := s.Store.GetMemo(ctx, &store.FindMemo{ID: &memo.ID})
+		if err != nil || latest == nil {
+			return
+		}
+
+		newTags := []string{}
+		for _, tag := range tags {
+			if !strings.Contains(latest.Content, tag) {
+				newTags = append(newTags, tag)
+			}
+		}
+
+		if len(newTags) > 0 {
+			latest.Content = strings.TrimRight(latest.Content, " \n\t") + "\n" + strings.Join(newTags, " ")
+			if err := memopayload.RebuildMemoPayload(latest, s.MarkdownService); err != nil {
+				slog.Error("failed to rebuild payload", slog.String("error", err.Error()))
+				return
+			}
+			if err := s.Store.UpdateMemo(ctx, &store.UpdateMemo{
+				ID:      latest.ID,
+				Content: &latest.Content,
+				Payload: latest.Payload,
+			}); err != nil {
+				slog.Error("failed to update memo tags", slog.String("error", err.Error()))
+			}
+		}
+	}()
+
 	return memoMessage, nil
 }
 

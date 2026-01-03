@@ -68,6 +68,7 @@ message InstanceSetting {
     GeneralSetting general_setting = 2;
     StorageSetting storage_setting = 3;
     MemoRelatedSetting memo_related_setting = 4;
+    AISetting ai_setting = 5;
   }
 
   // Enumeration of instance setting keys.
@@ -79,6 +80,8 @@ message InstanceSetting {
     STORAGE = 2;
     // MEMO_RELATED is the key for memo related settings.
     MEMO_RELATED = 3;
+    // AI is the key for AI settings.
+    AI = 4;
   }
 
   // General instance settings configuration.
@@ -157,6 +160,13 @@ message InstanceSetting {
     bool enable_double_click_edit = 4;
     // reactions is the list of reactions.
     repeated string reactions = 7;
+  }
+
+  // AI configuration settings.
+  message AISetting {
+    string openai_api_key = 1;
+    string openai_base_url = 2;
+    string openai_model = 3;
   }
 }
 

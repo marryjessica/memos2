@@ -47,6 +47,8 @@ func (s *APIV1Service) GetInstanceSetting(ctx context.Context, request *v1pb.Get
 		_, err = s.Store.GetInstanceMemoRelatedSetting(ctx)
 	case storepb.InstanceSettingKey_STORAGE:
 		_, err = s.Store.GetInstanceStorageSetting(ctx)
+	case storepb.InstanceSettingKey_AI:
+		_, err = s.Store.GetInstanceAISetting(ctx)
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported instance setting key: %v", instanceSettingKey)
 	}
@@ -119,6 +121,10 @@ func convertInstanceSettingFromStore(setting *storepb.InstanceSetting) *v1pb.Ins
 		instanceSetting.Value = &v1pb.InstanceSetting_MemoRelatedSetting_{
 			MemoRelatedSetting: convertInstanceMemoRelatedSettingFromStore(setting.GetMemoRelatedSetting()),
 		}
+	case *storepb.InstanceSetting_AiSetting:
+		instanceSetting.Value = &v1pb.InstanceSetting_AiSetting{
+			AiSetting: convertInstanceAISettingFromStore(setting.GetAiSetting()),
+		}
 	}
 	return instanceSetting
 }
@@ -143,6 +149,10 @@ func convertInstanceSettingToStore(setting *v1pb.InstanceSetting) *storepb.Insta
 	case storepb.InstanceSettingKey_MEMO_RELATED:
 		instanceSetting.Value = &storepb.InstanceSetting_MemoRelatedSetting{
 			MemoRelatedSetting: convertInstanceMemoRelatedSettingToStore(setting.GetMemoRelatedSetting()),
+		}
+	case storepb.InstanceSettingKey_AI:
+		instanceSetting.Value = &storepb.InstanceSetting_AiSetting{
+			AiSetting: convertInstanceAISettingToStore(setting.GetAiSetting()),
 		}
 	default:
 		// Keep the default GeneralSetting value
@@ -287,4 +297,26 @@ func (s *APIV1Service) GetInstanceOwner(ctx context.Context) (*v1pb.User, error)
 
 	ownerCache = convertUserFromStore(user)
 	return ownerCache, nil
+}
+
+func convertInstanceAISettingFromStore(setting *storepb.InstanceAISetting) *v1pb.InstanceSetting_AISetting {
+	if setting == nil {
+		return nil
+	}
+	return &v1pb.InstanceSetting_AISetting{
+		OpenaiApiKey:  setting.OpenaiApiKey,
+		OpenaiBaseUrl: setting.OpenaiBaseUrl,
+		OpenaiModel:   setting.OpenaiModel,
+	}
+}
+
+func convertInstanceAISettingToStore(setting *v1pb.InstanceSetting_AISetting) *storepb.InstanceAISetting {
+	if setting == nil {
+		return nil
+	}
+	return &storepb.InstanceAISetting{
+		OpenaiApiKey:  setting.OpenaiApiKey,
+		OpenaiBaseUrl: setting.OpenaiBaseUrl,
+		OpenaiModel:   setting.OpenaiModel,
+	}
 }

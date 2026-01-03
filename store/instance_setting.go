@@ -37,6 +37,8 @@ func (s *Store) UpsertInstanceSetting(ctx context.Context, upsert *storepb.Insta
 		valueBytes, err = protojson.Marshal(upsert.GetStorageSetting())
 	} else if upsert.Key == storepb.InstanceSettingKey_MEMO_RELATED {
 		valueBytes, err = protojson.Marshal(upsert.GetMemoRelatedSetting())
+	} else if upsert.Key == storepb.InstanceSettingKey_AI {
+		valueBytes, err = protojson.Marshal(upsert.GetAiSetting())
 	} else {
 		return nil, errors.Errorf("unsupported instance setting key: %v", upsert.Key)
 	}
@@ -168,6 +170,25 @@ func (s *Store) GetInstanceMemoRelatedSetting(ctx context.Context) (*storepb.Ins
 	return instanceMemoRelatedSetting, nil
 }
 
+func (s *Store) GetInstanceAISetting(ctx context.Context) (*storepb.InstanceAISetting, error) {
+	instanceSetting, err := s.GetInstanceSetting(ctx, &FindInstanceSetting{
+		Name: storepb.InstanceSettingKey_AI.String(),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get instance ai setting")
+	}
+
+	instanceAISetting := &storepb.InstanceAISetting{}
+	if instanceSetting != nil {
+		instanceAISetting = instanceSetting.GetAiSetting()
+	}
+	s.instanceSettingCache.Set(ctx, storepb.InstanceSettingKey_AI.String(), &storepb.InstanceSetting{
+		Key:   storepb.InstanceSettingKey_AI,
+		Value: &storepb.InstanceSetting_AiSetting{AiSetting: instanceAISetting},
+	})
+	return instanceAISetting, nil
+}
+
 const (
 	defaultInstanceStorageType       = storepb.InstanceStorageSetting_DATABASE
 	defaultInstanceUploadSizeLimitMb = 30
@@ -231,6 +252,12 @@ func convertInstanceSettingFromRaw(instanceSettingRaw *InstanceSetting) (*storep
 			return nil, err
 		}
 		instanceSetting.Value = &storepb.InstanceSetting_MemoRelatedSetting{MemoRelatedSetting: memoRelatedSetting}
+	case storepb.InstanceSettingKey_AI.String():
+		aiSetting := &storepb.InstanceAISetting{}
+		if err := protojsonUnmarshaler.Unmarshal([]byte(instanceSettingRaw.Value), aiSetting); err != nil {
+			return nil, err
+		}
+		instanceSetting.Value = &storepb.InstanceSetting_AiSetting{AiSetting: aiSetting}
 	default:
 		// Skip unsupported instance setting key.
 		return nil, nil
