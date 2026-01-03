@@ -67,6 +67,7 @@ const Home = () => {
                         showVisibility
                         showPinned
                         compact={context?.compact}
+                        onAddAnnotation={() => handleAddAnnotationTrigger(memo)}
                     />
                 </MemoContextMenu>
 

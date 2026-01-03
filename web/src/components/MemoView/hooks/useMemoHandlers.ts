@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useInstance } from "@/contexts/InstanceContext";
+
 import useNavigateTo from "@/hooks/useNavigateTo";
 
 interface UseMemoHandlersOptions {
@@ -11,9 +11,8 @@ interface UseMemoHandlersOptions {
 }
 
 export const useMemoHandlers = (options: UseMemoHandlersOptions) => {
-  const { memoName, parentPage, readonly, openEditor, openPreview } = options;
+  const { memoName, parentPage, openPreview } = options;
   const navigateTo = useNavigateTo();
-  const { memoRelatedSetting } = useInstance();
 
   const handleGotoMemoDetailPage = useCallback(() => {
     navigateTo(`/${memoName}`, { state: { from: parentPage } });
@@ -34,13 +33,10 @@ export const useMemoHandlers = (options: UseMemoHandlersOptions) => {
 
   const handleMemoContentDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (readonly) return;
-      if (memoRelatedSetting.enableDoubleClickEdit) {
-        e.preventDefault();
-        openEditor();
-      }
+      e.preventDefault();
+      handleGotoMemoDetailPage();
     },
-    [readonly, openEditor, memoRelatedSetting.enableDoubleClickEdit],
+    [handleGotoMemoDetailPage],
   );
 
   return { handleGotoMemoDetailPage, handleMemoContentClick, handleMemoContentDoubleClick };

@@ -22,6 +22,8 @@ export interface MemoViewProps {
   className?: string;
   /** The parent page URL for navigation context */
   parentPage?: string;
+  /** Callback when add annotation is triggered */
+  onAddAnnotation?: () => void;
 }
 
 /**
@@ -38,6 +40,8 @@ export interface MemoHeaderProps {
   onGotoDetail: () => void;
   onUnpin: () => void;
   onToggleNsfwVisibility?: () => void;
+  /** Callback when add annotation is triggered */
+  onAddAnnotation?: () => void;
   // Reaction state
   reactionSelectorOpen: boolean;
   onReactionSelectorOpenChange: (open: boolean) => void;

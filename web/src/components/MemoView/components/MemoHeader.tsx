@@ -9,7 +9,7 @@ import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
 import MemoActionMenu from "../../MemoActionMenu";
-import { ReactionSelector } from "../../MemoReactionListView";
+import { MemoReactionListView, ReactionSelector } from "../../MemoReactionListView";
 import UserAvatar from "../../UserAvatar";
 import VisibilityIcon from "../../VisibilityIcon";
 import { useMemoViewContext, useMemoViewDerived } from "../MemoViewContext";
@@ -23,6 +23,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({
   onGotoDetail,
   onUnpin,
   onToggleNsfwVisibility,
+  onAddAnnotation,
   reactionSelectorOpen,
   onReactionSelectorOpenChange,
 }) => {
@@ -42,18 +43,25 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({
   );
 
   return (
-    <div className="w-full flex flex-row justify-between items-center gap-2">
-      {/* Left section: Creator info or time */}
-      <div className="w-auto max-w-[calc(100%-8rem)] grow flex flex-row justify-start items-center">
-        {showCreator && creator ? (
-          <CreatorDisplay creator={creator} displayTime={displayTime} onGotoDetail={onGotoDetail} />
-        ) : (
-          <TimeDisplay displayTime={displayTime} onGotoDetail={onGotoDetail} />
-        )}
-      </div>
+    <div className={cn(
+      "flex flex-row items-center gap-2",
+      showCreator ? "w-full justify-between" : "w-auto justify-end"
+    )}>
+      {/* Left section: Creator info or time - only show when showCreator is true */}
+      {showCreator && (
+        <div className="w-auto max-w-[calc(100%-8rem)] grow flex flex-row justify-start items-center">
+          {creator ? (
+            <CreatorDisplay creator={creator} displayTime={displayTime} onGotoDetail={onGotoDetail} />
+          ) : (
+            <TimeDisplay displayTime={displayTime} onGotoDetail={onGotoDetail} />
+          )}
+        </div>
+      )}
 
-      {/* Right section: Actions */}
+      {/* Right section: Reactions and Actions */}
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+        {/* Reaction list - show existing reactions */}
+        <MemoReactionListView memo={memo} reactions={memo.reactions} />
         {/* Reaction selector */}
         {!isArchived && (
           <ReactionSelector
@@ -64,19 +72,21 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({
         )}
 
         {/* Comment count link */}
+        {/* Comment button - triggers add annotation */}
         {!isInMemoDetailPage && (
-          <Link
+          <button
             className={cn(
-              "flex flex-row justify-start items-center rounded-md p-1 hover:opacity-80",
+              "flex flex-row justify-start items-center rounded-md p-1 hover:opacity-80 transition-opacity",
               commentAmount === 0 && "invisible group-hover:visible",
             )}
-            to={`/${memo.name}#comments`}
-            viewTransition
-            state={{ from: parentPage }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddAnnotation?.();
+            }}
           >
             <MessageCircleMoreIcon className="w-4 h-4 mx-auto text-muted-foreground" />
             {commentAmount > 0 && <span className="text-xs text-muted-foreground">{commentAmount}</span>}
-          </Link>
+          </button>
         )}
 
         {/* Visibility icon */}

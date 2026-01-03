@@ -13,6 +13,7 @@ export interface MemoEditorProps {
   autoFocus?: boolean;
   onConfirm?: (memoName: string) => void;
   onCancel?: () => void;
+  defaultCreatedAt?: string;
 }
 
 export interface EditorContentProps {
@@ -26,7 +27,7 @@ export interface EditorToolbarProps {
   memoName?: string;
 }
 
-export interface EditorMetadataProps {}
+export interface EditorMetadataProps { }
 
 export interface FocusModeOverlayProps {
   isActive: boolean;

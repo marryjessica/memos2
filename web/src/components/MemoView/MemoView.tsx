@@ -89,24 +89,34 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
   return (
     <MemoViewContext.Provider value={contextValue}>
       <article className={cn(MEMO_CARD_BASE_CLASSES, className)} ref={cardRef} tabIndex={readonly ? -1 : 0}>
-        <MemoHeader
-          showCreator={props.showCreator}
-          showVisibility={props.showVisibility}
-          showPinned={props.showPinned}
-          onEdit={openEditor}
-          onGotoDetail={handleGotoMemoDetailPage}
-          onUnpin={unpinMemo}
-          onToggleNsfwVisibility={toggleNsfwVisibility}
-          reactionSelectorOpen={reactionSelectorOpen}
-          onReactionSelectorOpenChange={setReactionSelectorOpen}
-        />
+        {/* Horizontal layout: Content on left, Actions on right (aligned to first line) */}
+        <div className="w-full flex flex-row items-start justify-between gap-3">
+          {/* Left: Content (grows to fill space) */}
+          <div className="flex-1 min-w-0">
+            <MemoBody
+              compact={props.compact}
+              onContentClick={handleMemoContentClick}
+              onContentDoubleClick={handleMemoContentDoubleClick}
+              onToggleNsfwVisibility={toggleNsfwVisibility}
+            />
+          </div>
 
-        <MemoBody
-          compact={props.compact}
-          onContentClick={handleMemoContentClick}
-          onContentDoubleClick={handleMemoContentDoubleClick}
-          onToggleNsfwVisibility={toggleNsfwVisibility}
-        />
+          {/* Right: Actions (aligned to first line) */}
+          <div className="flex-shrink-0">
+            <MemoHeader
+              showCreator={false}
+              showVisibility={props.showVisibility}
+              showPinned={props.showPinned}
+              onEdit={openEditor}
+              onGotoDetail={handleGotoMemoDetailPage}
+              onUnpin={unpinMemo}
+              onToggleNsfwVisibility={toggleNsfwVisibility}
+              onAddAnnotation={props.onAddAnnotation}
+              reactionSelectorOpen={reactionSelectorOpen}
+              onReactionSelectorOpenChange={setReactionSelectorOpen}
+            />
+          </div>
+        </div>
 
         <PreviewImageDialog
           open={previewState.open}

@@ -1,5 +1,7 @@
+import dayjs from "dayjs";
 import { CalendarIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
+import MemoEditor from "@/components/MemoEditor";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DailyGroup } from "@/hooks/useGroupedMemos";
@@ -30,16 +32,35 @@ interface DailyMemoGroupProps {
 const DailyMemoGroup = ({
     group,
     renderMemo,
-    showQuickAdd = false,
     onQuickAdd,
     className,
     isToday = false,
     defaultExpanded = true,
 }: DailyMemoGroupProps) => {
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+    const [showQuickAddEditor, setShowQuickAddEditor] = useState(false);
 
     const totalTasks = group.incompleteCount + group.completeCount;
     const hasTaskStats = totalTasks > 0;
+
+    const handleQuickAddClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // If external handler provided, use it (legacy), otherwise toggle inline editor
+        if (onQuickAdd) {
+            onQuickAdd();
+        } else {
+            setShowQuickAddEditor(true);
+            setIsExpanded(true);
+        }
+    };
+
+    const handleEditorConfirm = () => {
+        setShowQuickAddEditor(false);
+    };
+
+    const handleEditorCancel = () => {
+        setShowQuickAddEditor(false);
+    };
 
     return (
         <div
@@ -120,28 +141,40 @@ const DailyMemoGroup = ({
                         </div>
                     )}
 
-                    {/* Quick Add Button (for today) */}
-                    {showQuickAdd && isToday && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onQuickAdd?.();
-                            }}
-                        >
-                            <PlusIcon className="w-4 h-4 mr-1" />
-                            添加
-                        </Button>
-                    )}
+                    {/* Quick Add Button (Visible if showQuickAdd is true OR it's a past date we want to allow adding to?) */}
+                    {/* User requirement: "upper right add button... click to add todo to current date" */}
+                    {/* Currently restricted to isToday by DailyMemoList, but the component check is generic. */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={handleQuickAddClick}
+                    >
+                        <PlusIcon className="w-4 h-4 mr-1" />
+                        添加
+                    </Button>
                 </div>
             </div>
 
             {/* Content - Memo List */}
             {isExpanded && (
                 <div className="px-4 pb-3 space-y-0">
-                    {group.memos.length === 0 ? (
+                    {/* Inline Editor */}
+                    {showQuickAddEditor && (
+                        <div className="mb-3 border border-primary/20 rounded-lg overflow-hidden shadow-sm">
+                            <MemoEditor
+                                className="border-none"
+                                cacheKey={`daily-add-${group.date}`}
+                                autoFocus
+                                onConfirm={handleEditorConfirm}
+                                onCancel={handleEditorCancel}
+                                defaultCreatedAt={dayjs(group.date).toISOString()}
+                                placeholder={`添加待办至 ${group.displayDate}...`}
+                            />
+                        </div>
+                    )}
+
+                    {group.memos.length === 0 && !showQuickAddEditor ? (
                         <div className="text-center py-6 text-muted-foreground text-sm">
                             暂无待办
                         </div>

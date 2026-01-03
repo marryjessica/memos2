@@ -9,6 +9,7 @@ export const useMemoInit = (
   cacheKey: string | undefined,
   username: string,
   autoFocus?: boolean,
+  defaultCreatedAt?: string,
 ) => {
   const { actions, dispatch } = useEditorContext();
   const initializedRef = useRef(false);
@@ -37,6 +38,10 @@ export const useMemoInit = (
           if (cachedContent) {
             dispatch(actions.updateContent(cachedContent));
           }
+          // Set default creation time if provided
+          if (defaultCreatedAt) {
+            dispatch(actions.setTimestamps({ createTime: new Date(defaultCreatedAt) }));
+          }
         }
       } catch (error) {
         console.error("Failed to initialize editor:", error);
@@ -52,5 +57,5 @@ export const useMemoInit = (
     };
 
     init();
-  }, [memoName, cacheKey, username, autoFocus, actions, dispatch, editorRef]);
+  }, [memoName, cacheKey, username, autoFocus, defaultCreatedAt, actions, dispatch, editorRef]);
 };

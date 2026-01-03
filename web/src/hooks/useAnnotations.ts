@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { memoServiceClient } from "@/connect";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { MemoSchema, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { memoKeys, useMemoComments } from "./useMemoQueries";
 
 /**
@@ -19,10 +20,14 @@ export interface UseAnnotationsReturn {
     error: Error | null;
     /** Add a new annotation */
     addAnnotation: (content: string) => Promise<Memo>;
+    /** Update an annotation */
+    updateAnnotation: (payload: { name: string; content: string }) => Promise<void>;
     /** Delete an annotation */
     deleteAnnotation: (annotationName: string) => Promise<void>;
     /** Whether an annotation is being added */
     isAdding: boolean;
+    /** Whether an annotation is being updated */
+    isUpdating: boolean;
     /** Whether an annotation is being deleted */
     isDeleting: boolean;
 }
@@ -79,6 +84,19 @@ export function useAnnotations(memoName: string): UseAnnotationsReturn {
         },
     });
 
+    // Mutation to update annotation
+    const updateMutation = useMutation({
+        mutationFn: async ({ name, content }: { name: string; content: string }) => {
+            await memoServiceClient.updateMemo({
+                memo: create(MemoSchema, { name, content }),
+                updateMask: create(FieldMaskSchema, { paths: ["content"] }),
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: memoKeys.comments(memoName) });
+        },
+    });
+
     // Mutation to delete annotation
     const deleteMutation = useMutation({
         mutationFn: async (annotationName: string) => {
@@ -96,8 +114,10 @@ export function useAnnotations(memoName: string): UseAnnotationsReturn {
         isLoading,
         error: error as Error | null,
         addAnnotation: addMutation.mutateAsync,
+        updateAnnotation: updateMutation.mutateAsync,
         deleteAnnotation: deleteMutation.mutateAsync,
         isAdding: addMutation.isPending,
+        isUpdating: updateMutation.isPending,
         isDeleting: deleteMutation.isPending,
     };
 }

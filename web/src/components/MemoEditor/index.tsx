@@ -16,7 +16,7 @@ import { EditorProvider, useEditorContext } from "./state";
 import type { MemoEditorProps } from "./types";
 
 const MemoEditor = (props: MemoEditorProps) => {
-  const { className, cacheKey, memoName, parentMemoName, autoFocus, placeholder, onConfirm, onCancel } = props;
+  const { className, cacheKey, memoName, parentMemoName, autoFocus, placeholder, onConfirm, onCancel, defaultCreatedAt } = props;
 
   return (
     <EditorProvider>
@@ -29,6 +29,7 @@ const MemoEditor = (props: MemoEditorProps) => {
         placeholder={placeholder}
         onConfirm={onConfirm}
         onCancel={onCancel}
+        defaultCreatedAt={defaultCreatedAt}
       />
     </EditorProvider>
   );
@@ -43,6 +44,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   placeholder,
   onConfirm,
   onCancel,
+  defaultCreatedAt,
 }) => {
   const t = useTranslate();
   const queryClient = useQueryClient();
@@ -50,7 +52,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const editorRef = useRef<EditorRefActions>(null);
   const { state, actions, dispatch } = useEditorContext();
 
-  useMemoInit(editorRef, memoName, cacheKey, currentUser?.name ?? "", autoFocus);
+  useMemoInit(editorRef, memoName, cacheKey, currentUser?.name ?? "", autoFocus, defaultCreatedAt);
 
   // Auto-save content to localStorage
   useAutoSave(state.content, currentUser?.name ?? "", cacheKey);
