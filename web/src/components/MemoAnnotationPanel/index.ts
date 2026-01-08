@@ -1,2 +1,1 @@
-export { default as MemoAnnotationPanel } from "./MemoAnnotationPanel";
-export { default } from "./MemoAnnotationPanel";
+export { default as MemoAnnotationPanel, default } from "./MemoAnnotationPanel";

@@ -226,6 +226,16 @@ message Memo {
     bool has_code = 3;
     bool has_incomplete_tasks = 4;
   }
+
+  // Timer tracking information.
+  message TimerData {
+    int64 accumulated_seconds = 1;
+    bool is_running = 2;
+    int64 last_start_timestamp = 3;
+  }
+
+  // Optional. Timer tracking information.
+  optional TimerData timer = 21 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message Location {

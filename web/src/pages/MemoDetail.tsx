@@ -175,11 +175,7 @@ const MemoDetail = () => {
       </div>
 
       {/* Annotation Panel - rendered outside the main layout */}
-      <MemoAnnotationPanel
-        memo={memo}
-        open={showAnnotationPanel}
-        onClose={() => setShowAnnotationPanel(false)}
-      />
+      <MemoAnnotationPanel memo={memo} open={showAnnotationPanel} onClose={() => setShowAnnotationPanel(false)} />
     </section>
   );
 };

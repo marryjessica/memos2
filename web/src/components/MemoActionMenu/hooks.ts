@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import { useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { useCallback } from "react";
@@ -10,7 +11,9 @@ import { userKeys } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { Memo_TimerDataSchema } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { calculateNewTimerState } from "@/utils/memo";
 import { removeCompletedTasks } from "@/utils/markdown-manipulation";
 
 interface UseMemoActionHandlersOptions {
@@ -58,13 +61,31 @@ export const useMemoActionHandlers = ({ memo, onEdit, setDeleteDialogOpen, setRe
     const state = memo.state === State.ARCHIVED ? State.NORMAL : State.ARCHIVED;
     const message = memo.state === State.ARCHIVED ? t("message.restored-successfully") : t("message.archived-successfully");
 
+    let timerUpdate = undefined;
+    const updateMask = ["state"];
+
+    // Auto-pause timer if archiving and currently running
+    // Auto-pause timer if archiving and currently running
+    if (isArchiving && memo.timer?.isRunning) {
+      const newTimerState = calculateNewTimerState(
+        Date.now() / 1000,
+        Number(memo.timer.lastStartTimestamp),
+        Number(memo.timer.accumulatedSeconds),
+        false // force pause
+      );
+
+      timerUpdate = create(Memo_TimerDataSchema, newTimerState);
+      updateMask.push("timer");
+    }
+
     try {
       await updateMemo({
         update: {
           name: memo.name,
           state,
+          timer: timerUpdate,
         },
-        updateMask: ["state"],
+        updateMask,
       });
       toast.success(message);
     } catch (error: unknown) {

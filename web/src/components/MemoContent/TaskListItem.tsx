@@ -3,6 +3,9 @@ import { useRef } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateMemo } from "@/hooks/useMemoQueries";
 import { toggleTaskAtIndex } from "@/utils/markdown-manipulation";
+import { create } from "@bufbuild/protobuf";
+import { Memo_TimerDataSchema } from "@/types/proto/api/v1/memo_service_pb";
+import { calculateNewTimerState } from "@/utils/memo";
 import { useMemoViewContext, useMemoViewDerived } from "../MemoView/MemoViewContext";
 
 interface TaskListItemProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -53,12 +56,29 @@ export const TaskListItem: React.FC<TaskListItemProps> = ({ checked, ...props })
 
     // Update memo content using the string manipulation utility
     const newContent = toggleTaskAtIndex(memo.content, taskIndex, newChecked);
+
+    const updateRequest: any = {
+      name: memo.name,
+      content: newContent,
+    };
+    const updateMask = ["content"];
+
+    // Auto-pause timer if checking a task (marking as done) and timer is running
+    if (newChecked && memo.timer?.isRunning) {
+      const newTimerState = calculateNewTimerState(
+        Date.now() / 1000,
+        Number(memo.timer.lastStartTimestamp),
+        Number(memo.timer.accumulatedSeconds),
+        false // force pause
+      );
+
+      updateRequest.timer = create(Memo_TimerDataSchema, newTimerState);
+      updateMask.push("timer");
+    }
+
     updateMemo({
-      update: {
-        name: memo.name,
-        content: newContent,
-      },
-      updateMask: ["content"],
+      update: updateRequest,
+      updateMask: updateMask,
     });
   };
 

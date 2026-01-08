@@ -1,2 +1,1 @@
-export { default as MemoContextMenu } from "./MemoContextMenu";
-export { default } from "./MemoContextMenu";
+export { default as MemoContextMenu, default } from "./MemoContextMenu";

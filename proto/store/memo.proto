@@ -24,4 +24,12 @@ message MemoPayload {
     double latitude = 2;
     double longitude = 3;
   }
+
+  message TimerData {
+    int64 accumulated_seconds = 1;
+    bool is_running = 2;
+    int64 last_start_timestamp = 3;
+  }
+
+  optional TimerData timer = 4;
 }

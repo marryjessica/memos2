@@ -26,6 +26,7 @@ type MemoPayload struct {
 	Property      *MemoPayload_Property  `protobuf:"bytes,1,opt,name=property,proto3" json:"property,omitempty"`
 	Location      *MemoPayload_Location  `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty"`
 	Tags          []string               `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
+	Timer         *MemoPayload_TimerData `protobuf:"bytes,4,opt,name=timer,proto3,oneof" json:"timer,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -77,6 +78,13 @@ func (x *MemoPayload) GetLocation() *MemoPayload_Location {
 func (x *MemoPayload) GetTags() []string {
 	if x != nil {
 		return x.Tags
+	}
+	return nil
+}
+
+func (x *MemoPayload) GetTimer() *MemoPayload_TimerData {
+	if x != nil {
+		return x.Timer
 	}
 	return nil
 }
@@ -210,15 +218,76 @@ func (x *MemoPayload_Location) GetLongitude() float64 {
 	return 0
 }
 
+type MemoPayload_TimerData struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	AccumulatedSeconds int64                  `protobuf:"varint,1,opt,name=accumulated_seconds,json=accumulatedSeconds,proto3" json:"accumulated_seconds,omitempty"`
+	IsRunning          bool                   `protobuf:"varint,2,opt,name=is_running,json=isRunning,proto3" json:"is_running,omitempty"`
+	LastStartTimestamp int64                  `protobuf:"varint,3,opt,name=last_start_timestamp,json=lastStartTimestamp,proto3" json:"last_start_timestamp,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *MemoPayload_TimerData) Reset() {
+	*x = MemoPayload_TimerData{}
+	mi := &file_store_memo_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MemoPayload_TimerData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemoPayload_TimerData) ProtoMessage() {}
+
+func (x *MemoPayload_TimerData) ProtoReflect() protoreflect.Message {
+	mi := &file_store_memo_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemoPayload_TimerData.ProtoReflect.Descriptor instead.
+func (*MemoPayload_TimerData) Descriptor() ([]byte, []int) {
+	return file_store_memo_proto_rawDescGZIP(), []int{0, 2}
+}
+
+func (x *MemoPayload_TimerData) GetAccumulatedSeconds() int64 {
+	if x != nil {
+		return x.AccumulatedSeconds
+	}
+	return 0
+}
+
+func (x *MemoPayload_TimerData) GetIsRunning() bool {
+	if x != nil {
+		return x.IsRunning
+	}
+	return false
+}
+
+func (x *MemoPayload_TimerData) GetLastStartTimestamp() int64 {
+	if x != nil {
+		return x.LastStartTimestamp
+	}
+	return 0
+}
+
 var File_store_memo_proto protoreflect.FileDescriptor
 
 const file_store_memo_proto_rawDesc = "" +
 	"\n" +
-	"\x10store/memo.proto\x12\vmemos.store\"\xa0\x03\n" +
+	"\x10store/memo.proto\x12\vmemos.store\"\xf9\x04\n" +
 	"\vMemoPayload\x12=\n" +
 	"\bproperty\x18\x01 \x01(\v2!.memos.store.MemoPayload.PropertyR\bproperty\x12=\n" +
 	"\blocation\x18\x02 \x01(\v2!.memos.store.MemoPayload.LocationR\blocation\x12\x12\n" +
-	"\x04tags\x18\x03 \x03(\tR\x04tags\x1a\x96\x01\n" +
+	"\x04tags\x18\x03 \x03(\tR\x04tags\x12=\n" +
+	"\x05timer\x18\x04 \x01(\v2\".memos.store.MemoPayload.TimerDataH\x00R\x05timer\x88\x01\x01\x1a\x96\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +
@@ -227,7 +296,13 @@ const file_store_memo_proto_rawDesc = "" +
 	"\bLocation\x12 \n" +
 	"\vplaceholder\x18\x01 \x01(\tR\vplaceholder\x12\x1a\n" +
 	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
-	"\tlongitude\x18\x03 \x01(\x01R\tlongitudeB\vZ\tgen/storeb\x06proto3"
+	"\tlongitude\x18\x03 \x01(\x01R\tlongitude\x1a\x8d\x01\n" +
+	"\tTimerData\x12/\n" +
+	"\x13accumulated_seconds\x18\x01 \x01(\x03R\x12accumulatedSeconds\x12\x1d\n" +
+	"\n" +
+	"is_running\x18\x02 \x01(\bR\tisRunning\x120\n" +
+	"\x14last_start_timestamp\x18\x03 \x01(\x03R\x12lastStartTimestampB\b\n" +
+	"\x06_timerB\vZ\tgen/storeb\x06proto3"
 
 var (
 	file_store_memo_proto_rawDescOnce sync.Once
@@ -241,20 +316,22 @@ func file_store_memo_proto_rawDescGZIP() []byte {
 	return file_store_memo_proto_rawDescData
 }
 
-var file_store_memo_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_store_memo_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_store_memo_proto_goTypes = []any{
-	(*MemoPayload)(nil),          // 0: memos.store.MemoPayload
-	(*MemoPayload_Property)(nil), // 1: memos.store.MemoPayload.Property
-	(*MemoPayload_Location)(nil), // 2: memos.store.MemoPayload.Location
+	(*MemoPayload)(nil),           // 0: memos.store.MemoPayload
+	(*MemoPayload_Property)(nil),  // 1: memos.store.MemoPayload.Property
+	(*MemoPayload_Location)(nil),  // 2: memos.store.MemoPayload.Location
+	(*MemoPayload_TimerData)(nil), // 3: memos.store.MemoPayload.TimerData
 }
 var file_store_memo_proto_depIdxs = []int32{
 	1, // 0: memos.store.MemoPayload.property:type_name -> memos.store.MemoPayload.Property
 	2, // 1: memos.store.MemoPayload.location:type_name -> memos.store.MemoPayload.Location
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 2: memos.store.MemoPayload.timer:type_name -> memos.store.MemoPayload.TimerData
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_store_memo_proto_init() }
@@ -262,13 +339,14 @@ func file_store_memo_proto_init() {
 	if File_store_memo_proto != nil {
 		return
 	}
+	file_store_memo_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_store_memo_proto_rawDesc), len(file_store_memo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

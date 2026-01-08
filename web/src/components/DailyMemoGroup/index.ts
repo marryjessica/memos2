@@ -1,2 +1,1 @@
-export { default as DailyMemoGroup } from "./DailyMemoGroup";
-export { default } from "./DailyMemoGroup";
+export { default as DailyMemoGroup, default } from "./DailyMemoGroup";

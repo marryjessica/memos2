@@ -12,6 +12,7 @@ import MemoActionMenu from "../../MemoActionMenu";
 import { MemoReactionListView, ReactionSelector } from "../../MemoReactionListView";
 import UserAvatar from "../../UserAvatar";
 import VisibilityIcon from "../../VisibilityIcon";
+import MemoTimer from "../../MemoTimer";
 import { useMemoViewContext, useMemoViewDerived } from "../MemoViewContext";
 import type { MemoHeaderProps } from "../types";
 
@@ -60,6 +61,8 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({
 
       {/* Right section: Reactions and Actions */}
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+        {/* Timer */}
+        <MemoTimer memo={memo} />
         {/* Reaction list - show existing reactions */}
         <MemoReactionListView memo={memo} reactions={memo.reactions} />
         {/* Reaction selector */}

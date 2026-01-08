@@ -6,6 +6,8 @@ import {
   InstanceProfile,
   InstanceProfileSchema,
   InstanceSetting,
+  InstanceSetting_AISetting,
+  InstanceSetting_AISettingSchema,
   InstanceSetting_GeneralSetting,
   InstanceSetting_GeneralSettingSchema,
   InstanceSetting_Key,
@@ -13,8 +15,6 @@ import {
   InstanceSetting_MemoRelatedSettingSchema,
   InstanceSetting_StorageSetting,
   InstanceSetting_StorageSettingSchema,
-  InstanceSetting_AISetting,
-  InstanceSetting_AISettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
 
 const instanceSettingNamePrefix = "instance/settings/";

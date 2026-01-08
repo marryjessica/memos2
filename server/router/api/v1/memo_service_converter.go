@@ -13,7 +13,7 @@ import (
 	"github.com/usememos/memos/store"
 )
 
-func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Memo, reactions []*store.Reaction, attachments []*store.Attachment) (*v1pb.Memo, error) {
+func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Memo, reactions []*store.Reaction, attachments []*store.Attachment, relations []*v1pb.MemoRelation) (*v1pb.Memo, error) {
 	displayTs := memo.CreatedTs
 	instanceMemoRelatedSetting, err := s.Store.GetInstanceMemoRelatedSetting(ctx)
 	if err != nil {
@@ -39,6 +39,7 @@ func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Mem
 		memoMessage.Tags = memo.Payload.Tags
 		memoMessage.Property = convertMemoPropertyFromStore(memo.Payload.Property)
 		memoMessage.Location = convertLocationFromStore(memo.Payload.Location)
+		memoMessage.Timer = convertTimerFromStore(memo.Payload.Timer)
 	}
 
 	if memo.ParentUID != nil {
@@ -53,11 +54,7 @@ func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Mem
 		memoMessage.Reactions = append(memoMessage.Reactions, reactionResponse)
 	}
 
-	listMemoRelationsResponse, err := s.ListMemoRelations(ctx, &v1pb.ListMemoRelationsRequest{Name: name})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list memo relations")
-	}
-	memoMessage.Relations = listMemoRelationsResponse.Relations
+	memoMessage.Relations = relations
 
 	memoMessage.Attachments = []*v1pb.Attachment{}
 
@@ -95,6 +92,28 @@ func convertLocationFromStore(location *storepb.MemoPayload_Location) *v1pb.Loca
 		Placeholder: location.Placeholder,
 		Latitude:    location.Latitude,
 		Longitude:   location.Longitude,
+	}
+}
+
+func convertTimerFromStore(timer *storepb.MemoPayload_TimerData) *v1pb.Memo_TimerData {
+	if timer == nil {
+		return nil
+	}
+	return &v1pb.Memo_TimerData{
+		AccumulatedSeconds: timer.AccumulatedSeconds,
+		IsRunning:          timer.IsRunning,
+		LastStartTimestamp: timer.LastStartTimestamp,
+	}
+}
+
+func convertTimerToStore(timer *v1pb.Memo_TimerData) *storepb.MemoPayload_TimerData {
+	if timer == nil {
+		return nil
+	}
+	return &storepb.MemoPayload_TimerData{
+		AccumulatedSeconds: timer.AccumulatedSeconds,
+		IsRunning:          timer.IsRunning,
+		LastStartTimestamp: timer.LastStartTimestamp,
 	}
 }
 

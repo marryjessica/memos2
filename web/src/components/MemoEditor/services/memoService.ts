@@ -136,9 +136,9 @@ export const memoService = {
 
     const memo = options.parentMemoName
       ? await memoServiceClient.createMemoComment({
-        name: options.parentMemoName,
-        comment: memoData,
-      })
+          name: options.parentMemoName,
+          comment: memoData,
+        })
       : await memoServiceClient.createMemo({ memo: memoData });
 
     return { memoName: memo.name, hasChanges: true };
