@@ -2,6 +2,12 @@
 
 This document provides comprehensive guidance for AI agents working with the Memos codebase. It covers architecture, workflows, conventions, and key patterns.
 
+## Module-Specific Guides
+
+For detailed implementation details, refer to the module-specific guides:
+- **Backend:** [server/AGENTS.md](server/AGENTS.md) - Service logic, Store patterns, AI integration.
+- **Frontend:** [web/AGENTS.md](web/AGENTS.md) - React components, Hooks, Daily Memo system.
+
 ## Project Overview
 
 Memos is a self-hosted knowledge management platform built with:
@@ -10,6 +16,12 @@ Memos is a self-hosted knowledge management platform built with:
 - **Databases:** SQLite (default), MySQL, PostgreSQL
 - **Protocol:** Protocol Buffers (v2) with buf for code generation
 - **API Layer:** Dual protocol - Connect RPC (browsers) + gRPC-Gateway (REST)
+
+### Recent Architectural Updates
+
+- **Daily Memo System:** A journal-like feature where each day has a dedicated memo (title `# YYYY-MM-DD`).
+- **AI Integration:** Asynchronous auto-tagging and content processing via background runners.
+- **Memo Timers:** Native support for tracking duration on tasks, persisted in memo payloads.
 
 ## Architecture
 
@@ -142,7 +154,22 @@ type Driver interface {
 - Config: Default TTL 10 min, cleanup interval 5 min, max 1000 items
 - See: `store/store.go:10-57`
 
-### 3. Frontend State Management
+### 3. Async Background Tasks
+
+**Pattern:**
+- Complex operations (e.g., AI tagging, image processing) are offloaded to background runners.
+- Triggered asynchronously from service layer (fire-and-forget).
+- Located in `server/runner/`.
+- **Example:** `server/runner/memopayload` extracts tags/links after memo creation.
+
+### 4. Performance: Batch Fetching (N+1 Prevention)
+
+**Pattern:**
+- DO NOT loop through items to fetch relations one-by-one.
+- Use `IDList` fields in `Find` structs to fetch all relations in a single query.
+- **Example:** `ListMemoRelations` with `MemoIDList`.
+
+### 5. Frontend State Management
 
 **React Query v5 (Server State):**
 - All API calls go through custom hooks in `web/src/hooks/`

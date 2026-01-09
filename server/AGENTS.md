@@ -153,7 +153,29 @@ result, err := a.store.GetUserByPATHash(ctx, sha256Hash(token))
 - Long expiration (7 days)
 - Used to obtain new access tokens
 
-### 3. Service Layer Pattern
+
+### 3. Async Tasks & AI Integration
+
+**AI Auto-Tagging:**
+- Triggered asynchronously after memo creation
+- Uses `AIService` to generate tags based on content
+- Updates memo payload without blocking the user response
+
+```go
+// server/router/api/v1/memo_service.go
+go func() {
+    ctx := context.Background()
+    tags, err := s.AIService.GenerateTags(ctx, memo.Content)
+    // ... update memo payload with new tags
+}()
+```
+
+**Payload Rebuild Runner:**
+- Background runner (`server/runner/memopayload`)
+- Periodically or manually rebuilds memo payloads (e.g., after markdown parser updates)
+- Extracts metadata (tags, properties) from raw content
+
+### 4. Service Layer Pattern
 
 Each service follows this pattern:
 
@@ -192,7 +214,7 @@ func (s *APIV1Service) CreateMemo(
 }
 ```
 
-### 4. Store Layer: Driver Interface
+### 5. Store Layer: Driver Interface
 
 All database operations go through the `Driver` interface:
 
@@ -224,7 +246,25 @@ type Driver interface {
 - `store/db/mysql/` - MySQL (go-sql-driver/mysql)
 - `store/db/postgres/` - PostgreSQL (lib/pq)
 
-### 5. Caching Strategy
+### 6. Batch Fetching (N+1 Prevention)
+
+To avoid N+1 query performance issues, especially with relations and attachments, use batch fetching methods:
+
+```go
+// Good: Fetch all relations for a list of memos in one query
+relations, err := s.Store.ListMemoRelations(ctx, &store.FindMemoRelation{
+    MemoIDList: memoIDs, // Pass list of IDs
+})
+
+// Bad: Loop through memos and query for each
+for _, memo := range memos {
+    rels, _ := s.Store.ListMemoRelations(ctx, &store.FindMemoRelation{
+        MemoID: &memo.ID,
+    })
+}
+```
+
+### 7. Caching Strategy
 
 ```go
 // store/store.go
@@ -243,7 +283,7 @@ type Store struct {
 - Max items: 1000
 - Used for: instance settings, users, user settings
 
-### 6. Database Migration System
+### 8. Database Migration System
 
 **Migration Flow:**
 1. `preMigrate`: Check if DB exists. If not, apply `LATEST.sql`
@@ -474,6 +514,14 @@ cd proto && buf breaking --against .git#main
        UpdateNewModel(ctx context.Context, update *UpdateNewModel) error
        DeleteNewModel(ctx context.Context, delete *DeleteNewModel) error
    }
+
+### Feature Implementation: Memo Timer
+
+Recent additions include support for task timers within Memos:
+
+- **Proto Definition**: `TimerData` in `Memo` message (running state, accumulated time).
+- **Backend Logic**: Handled via `UpdateMemo` with specific payload updates.
+- **Store**: Persisted as part of the `MemoPayload` JSON blob.
    ```
 
 3. **Implement for Each Driver:**
@@ -800,7 +848,9 @@ Each plugin has its own README with usage examples.
 - Queries use pagination (`limit`, `offset`)
 - WAL journal mode for SQLite (reduces locking)
 - Parameterized queries prevent SQL injection
+- Parameterized queries prevent SQL injection
 - Connection pooling for MySQL/PostgreSQL
+- **Batch Operations**: Use `IDList` fields in Find structs to reduce round-trips.
 
 ### Caching
 

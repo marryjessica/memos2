@@ -152,7 +152,31 @@ import {
 4. Retry original request with new token
 5. On refresh failure, redirect to `/auth`
 
-### 3. Component Patterns
+
+### 3. Daily Memo System
+
+**Concept:**
+- One memo per day acts as a container/journal
+- Identified by title format: `# YYYY-MM-DD`
+- Created automatically in "Inbox" or "Daily" view if missing
+
+**Implementation (`hooks/useDailyMemo.ts`):**
+- **Query**: Filters memos by `creator_id` and `created_ts` (start/end of day)
+- **Title Check**: `isDailyMemoForDate(memo)` verifies title prefix
+- **Caching**: 30s stale time, specific query key `['daily-memo', 'YYYY-MM-DD']`
+
+### 4. Annotation System
+
+**Concept:**
+- "Comments" are repurposed as "Annotations" or "Sidebar Notes"
+- UI: Inline sidebar or dedicated panel
+
+**Hook (`hooks/useAnnotations.ts`):**
+- Wraps `createMemoComment`, `updateMemo`, `deleteMemo`
+- Provides simple interface: `addAnnotation`, `deleteAnnotation`
+- Manages optimistic UI updates (via React Query cache invalidation)
+
+### 5. Component Patterns
 
 **Functional Components with Hooks:**
 ```typescript
@@ -211,6 +235,15 @@ export function cn(...inputs: ClassValue[]) {
 - Theme files in `themes/`
 - CSS variables for dynamic theming
 - Dark mode support
+
+### 6. Feature Components
+
+**Memo Timer (`components/MemoTimer`):**
+- **Data Model**: `TimerData` (accumulated seconds, is_running, last_start_timestamp) in Memo payload
+- **Logic**:
+  - `calculateTimerDuration`: Computes real-time elapsed duration
+  - `calculateNewTimerState`: Toggles stats and updates timestamp
+- **Persistence**: Updates `timer` field in `Memo` via `updateMask`
 
 ## Development Commands
 
