@@ -75,6 +75,18 @@ Memos is a privacy-first, self-hosted knowledge base that works seamlessly for p
   - Clean, minimal design and dark mode support
   - Mobile-responsive layout
 
+- **📅 Daily Journaling**
+  - Automatic daily memos
+  - Organized timeline view
+
+- **🤖 AI Powered**
+  - Smart auto-tagging
+  - Efficient content organization
+
+- **⏱️ Productivity Tools**
+  - Built-in task timers
+  - Task management capabilities
+
 ## Quick Start
 
 ### Docker (Recommended)
@@ -112,7 +124,10 @@ We welcome contributions of all kinds! Whether you're fixing bugs, adding featur
 - 💡 [Suggest features](https://github.com/usememos/memos/issues/new?template=feature_request.md)
 - 🔧 [Submit pull requests](https://github.com/usememos/memos/pulls)
 - 📖 [Improve documentation](https://github.com/usememos/memos/tree/main/docs)
+
 - 🌍 [Help with translations](https://github.com/usememos/memos/tree/main/web/src/locales)
+
+**Building with AI?** Check out [AGENTS.md](AGENTS.md) for comprehensive architectural guides and patterns.
 
 ## Sponsors
 
